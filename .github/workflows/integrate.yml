@@ -1,0 +1,26 @@
+name: Integrate
+on:
+  workflow_run:
+    workflows:
+      - build-test
+    types:
+      - completed
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 0
+      - name: Run integration action
+        uses: ./
+        with:
+          branch-pattern: "^for_(?<base>[-a-zA-Z/._0-9]+)_(?<identifier>[a-zA-Z]+)$"
+          create-base-if-missing: true
+          delete-source: true
+          abort-integration-if-different-commits-on-origin: true

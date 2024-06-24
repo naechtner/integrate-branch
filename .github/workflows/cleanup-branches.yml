@@ -1,0 +1,13 @@
+name: Clean merged branches
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+
+jobs:
+  cleanup-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Delete merged branches
+        uses: imajeetyadav/delete-merged-branches@main

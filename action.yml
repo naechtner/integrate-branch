@@ -1,0 +1,26 @@
+name: 'Integrate branch'
+description: 'Integrate a branch onto the base branch'
+author: 'naechtner'
+inputs:
+  branch-pattern:
+    required: false
+    description: 'Branch pattern that is reintegrated onto the base branch (default: "^integrate_(?<base>[a-zA-Z/.-_0-9]+)_(?<identifier>.+)$"). The named identifier group is not required. The base group is required to exist though. This action requires write permissions to work.'
+    default: "^integrate_(?<base>[-a-zA-Z/._0-9]+)_(?<identifier>[^_]+)$"
+  create-base-if-missing:
+    required: false
+    description: 'Create the base branch if it does not exist'
+  delete-source:
+    default: 'false'
+    description: 'Delete the integration source once integrated if there are no further changes'
+  abort-integration-if-different-commits-on-origin:
+    default: 'false'
+    description: 'Abort the integration if the remote branch differs'
+  git-user-email:
+    default: 'action@github.com'
+    description: 'The user email used for commits. This needs to be a valid email address or the action will fail. (Default: "action@github.com")'
+  git-user-name:
+    default: 'Github Action'
+    description: 'The user name used for commits. (Default: "Github Action")'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

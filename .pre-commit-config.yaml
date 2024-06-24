@@ -1,0 +1,40 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.4.0
+      hooks:
+          - id: trailing-whitespace
+            exclude: ^(dist/.*)$
+          - id: end-of-file-fixer
+            exclude: ^(dist/.*)$
+          - id: check-yaml
+          - id: check-added-large-files
+    - repo: https://github.com/pre-commit/mirrors-eslint
+      rev: v8.44.0
+      hooks:
+          - id: eslint
+            files: \.[t]sx?$
+            types: [file]
+            types_or: [ts]
+    - repo: local
+      hooks:
+          - id: prettier
+            name: Prettier
+            language: node
+            entry: npx prettier --write --list-different --ignore-unknown
+            types_or: [ts]
+            stages: [pre-commit]
+          - id: eslint
+            name: Eslint
+            language: node
+            entry: npm run lint:fix
+            types_or: [ts]
+            stages: [pre-commit]
+          - id: package
+            name: Package
+            language: node
+            entry: npm run package
+            types_or: [ts]
+            stages: [pre-commit]
+            pass_filenames: false
