@@ -1,22 +1,31 @@
-import * as core from '@actions/core';
+import * as actionsCore from '@actions/core';
 import { integrate, UserEmail, UserName } from './integrate';
+import { InputNames } from './statics';
 
 function parseBooleanInput(key: string): boolean {
-    return core.getInput(key) === 'true';
+    return actionsCore.getInput(key) === 'true';
 }
 
 async function run(): Promise<void> {
     try {
-        const branchPattern = new RegExp(core.getInput('branch-pattern'));
-        const createBaseIfMissing = parseBooleanInput('create-base-if-missing');
-        const shouldDeleteSource = parseBooleanInput('delete-source');
-        const abortIntegrationIfDifferentCommitsOnOrigin = parseBooleanInput(
-            'abort-integration-if-newer-commits-on-origin'
+        const branchPattern = new RegExp(
+            actionsCore.getInput(InputNames.branchPattern)
         );
-        const userEmail = core.getInput('git-user-email') as UserEmail;
-        const userName = core.getInput('git-user-name') as UserName;
+        const createBaseIfMissing = parseBooleanInput(
+            InputNames.createBaseIfMissing
+        );
+        const shouldDeleteSource = parseBooleanInput(InputNames.deleteSource);
+        const abortIntegrationIfDifferentCommitsOnOrigin = parseBooleanInput(
+            InputNames.abortIfDifferentCommitsOnOrigin
+        );
+        const userEmail = actionsCore.getInput(
+            InputNames.gitUserEmail
+        ) as UserEmail;
+        const userName = actionsCore.getInput(
+            InputNames.gitUserName
+        ) as UserName;
 
-        core.info(
+        actionsCore.info(
             await integrate(branchPattern, {
                 createBaseIfMissing,
                 shouldDeleteSource,
@@ -26,7 +35,7 @@ async function run(): Promise<void> {
             })
         );
     } catch (error) {
-        if (error instanceof Error) core.setFailed(error.message);
+        if (error instanceof Error) actionsCore.setFailed(error.message);
     }
 }
 
