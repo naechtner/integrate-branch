@@ -7,6 +7,7 @@ on:
       - completed
 jobs:
   integrate:
+    name: integrate
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -24,3 +25,23 @@ jobs:
           create-base-if-missing: true
           delete-source: true
           abort-integration-if-different-commits-on-origin: true
+  show-outputs:
+    runs-on: ubuntu-latest
+    needs:
+      - integrate
+    steps:
+      - name: outputs
+        env:
+          INTEGRATION_TARGET: ${{ needs.integrate.outputs.integration-target }}
+          DID_INTEGRATE: ${{ needs.integrate.outputs.did-integrate }}
+          ABORTION_REASON: ${{ needs.integrate.outputs.abortion-reason }}
+          DELETED_SOURCE: ${{ needs.integrate.outputs.deleted-source }}
+          CREATED_BASE: ${{ needs.integrate.outputs.created-base }}
+        shell: bash
+        run: |
+            echo "Outputs:"
+            echo "integration-target: {INTEGRATION_TARGET}"
+            echo "did-integrate: {DID_INTEGRATE}"
+            echo "abortion-reason: {ABORTION_REASON}"
+            echo "deleted-source: {DELETED_SOURCE}"
+            echo "created-base: {CREATED_BASE}"
