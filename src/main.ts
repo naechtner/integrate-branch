@@ -25,7 +25,7 @@ async function run(): Promise<void> {
             InputNames.gitUserName
         ) as UserName;
 
-        actionsCore.info(
+        actionsCore.notice(
             await integrate(branchPattern, {
                 createBaseIfMissing,
                 shouldDeleteSource,
