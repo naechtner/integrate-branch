@@ -23,7 +23,7 @@ Consider adding the following command to your git aliases:
 
 ```integration = "!git push --force origin HEAD:refs/heads/integrate_$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)_someone";```
 
-If you always want to fetch first consider doing it with an initial rebase oull this:
+If you always want to fetch first consider doing it with an initial "rebase pull" this will be your desired alias:
 
 ```integration = "!git pull --rebase && git push --force origin HEAD:refs/heads/integrate_$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)_someone";```
 
