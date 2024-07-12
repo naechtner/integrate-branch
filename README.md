@@ -11,7 +11,7 @@ This Github action helps you to merge or rebase changes onto a certain branch af
 
 ## How to use
 
-- Requires repo read and write rights.
+- Requires repo write rights.
 - Add this to your main workflow and require the necessary actions as dependencies.
 - Checkout the repository
 - Call this action with the proper parameters for your use case
@@ -27,6 +27,12 @@ If you always want to fetch first consider doing it with an initial "rebase pull
 
 ```integration = "!git pull --rebase && git push --force origin HEAD:refs/heads/integrate_$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)_someone";```
 
+## Known issues
+
+- Changes to actions will fail the action
+- A follow up pipeline will not be triggered
+
+Both of these are by design from Github and can be bypassed using a private/app access token during the setup
 
 ## How to run the tests
 
