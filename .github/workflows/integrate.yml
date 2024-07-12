@@ -40,8 +40,8 @@ jobs:
         shell: bash
         run: |
             echo "Outputs:"
-            echo "integration-target: {INTEGRATION_TARGET}"
-            echo "did-integrate: {DID_INTEGRATE}"
-            echo "abortion-reason: {ABORTION_REASON}"
-            echo "deleted-source: {DELETED_SOURCE}"
-            echo "created-base: {CREATED_BASE}"
+            echo "integration-target: ${INTEGRATION_TARGET}"
+            echo "did-integrate: ${DID_INTEGRATE}"
+            echo "abortion-reason: ${ABORTION_REASON}"
+            echo "deleted-source: ${DELETED_SOURCE}"
+            echo "created-base: ${CREATED_BASE}"

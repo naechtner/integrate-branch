@@ -31,7 +31,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.integrate = integrate;
-const simpleGit = __importStar(__nccwpck_require__(9103));
+const simple_git_1 = __nccwpck_require__(9103);
+const actionsCore = __importStar(__nccwpck_require__(2186));
+const statics_1 = __nccwpck_require__(4093);
 async function checkIfIntegrationTargetExistsAndCreate(git, integrationTarget, createBaseIfMissing) {
     try {
         console.info(`Fetching "${integrationTarget}"`);
@@ -42,6 +44,7 @@ async function checkIfIntegrationTargetExistsAndCreate(git, integrationTarget, c
     catch (e) {
         if (createBaseIfMissing) {
             console.info("Couldn't find integration target, creating it");
+            actionsCore.setOutput(statics_1.OutputNames.createdBase, true);
             git.branch([integrationTarget]);
         }
         else {
@@ -70,19 +73,26 @@ async function conditionallyDeleteSource(git, integrationSource, shouldDeleteSou
         return;
     }
     console.info(`Deleting "${integrationSource}" on "origin"`);
+    actionsCore.setOutput(statics_1.OutputNames.deletedSource, true);
     await git.push('origin', integrationSource, ['--delete']);
 }
 async function integrate(branchPattern, { createBaseIfMissing, shouldDeleteSource, abortIntegrationIfDifferentCommitsOnOrigin, userEmail, userName, }) {
     var _a;
-    const git = simpleGit.simpleGit();
+    actionsCore.setOutput(statics_1.OutputNames.didIntegrate, false);
+    actionsCore.setOutput(statics_1.OutputNames.deletedSource, false);
+    actionsCore.setOutput(statics_1.OutputNames.createdBase, false);
+    const git = (0, simple_git_1.simpleGit)();
     const integrationSource = (await git.branch()).current;
     const match = integrationSource.match(branchPattern);
     const integrationTarget = (_a = match === null || match === void 0 ? void 0 : match.groups) === null || _a === void 0 ? void 0 : _a.base;
     if (!integrationTarget) {
+        actionsCore.setOutput(statics_1.OutputNames.abortionReason, statics_1.AbortionReasons.noTarget);
         return `Current branch does not match branch pattern or "base" group not defined\n\t↳Current branch: ${integrationSource}`;
     }
+    actionsCore.setOutput(statics_1.OutputNames.integrationTarget, integrationTarget);
     if (abortIntegrationIfDifferentCommitsOnOrigin &&
         !(await isRemoteTheSame(git, integrationSource))) {
+        actionsCore.setOutput(statics_1.OutputNames.abortionReason, statics_1.AbortionReasons.originAhead);
         return 'Branch was not integrated as the origin has been updated in the meantime';
     }
     console.info(`Integrating "${integrationSource}" into "${integrationTarget}"`);
@@ -93,7 +103,8 @@ async function integrate(branchPattern, { createBaseIfMissing, shouldDeleteSourc
     await conditionallyDeleteSource(git, integrationSource, shouldDeleteSource);
     console.info(`Pushing "${integrationTarget}" to "origin"`);
     await git.push('origin', integrationTarget, ['--set-upstream']);
-    return 'Branch was integrated';
+    actionsCore.setOutput(statics_1.OutputNames.didIntegrate, true);
+    return `Branch "${integrationSource}" was successfully integrated into "${integrationTarget}"`;
 }
 
 
@@ -128,20 +139,21 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__nccwpck_require__(2186));
+const actionsCore = __importStar(__nccwpck_require__(2186));
 const integrate_1 = __nccwpck_require__(2100);
+const statics_1 = __nccwpck_require__(4093);
 function parseBooleanInput(key) {
-    return core.getInput(key) === 'true';
+    return actionsCore.getInput(key) === 'true';
 }
 async function run() {
     try {
-        const branchPattern = new RegExp(core.getInput('branch-pattern'));
-        const createBaseIfMissing = parseBooleanInput('create-base-if-missing');
-        const shouldDeleteSource = parseBooleanInput('delete-source');
-        const abortIntegrationIfDifferentCommitsOnOrigin = parseBooleanInput('abort-integration-if-newer-commits-on-origin');
-        const userEmail = core.getInput('git-user-email');
-        const userName = core.getInput('git-user-name');
-        core.info(await (0, integrate_1.integrate)(branchPattern, {
+        const branchPattern = new RegExp(actionsCore.getInput(statics_1.InputNames.branchPattern));
+        const createBaseIfMissing = parseBooleanInput(statics_1.InputNames.createBaseIfMissing);
+        const shouldDeleteSource = parseBooleanInput(statics_1.InputNames.deleteSource);
+        const abortIntegrationIfDifferentCommitsOnOrigin = parseBooleanInput(statics_1.InputNames.abortIfDifferentCommitsOnOrigin);
+        const userEmail = actionsCore.getInput(statics_1.InputNames.gitUserEmail);
+        const userName = actionsCore.getInput(statics_1.InputNames.gitUserName);
+        actionsCore.notice(await (0, integrate_1.integrate)(branchPattern, {
             createBaseIfMissing,
             shouldDeleteSource,
             abortIntegrationIfDifferentCommitsOnOrigin,
@@ -151,10 +163,45 @@ async function run() {
     }
     catch (error) {
         if (error instanceof Error)
-            core.setFailed(error.message);
+            actionsCore.setFailed(error.message);
+        else
+            actionsCore.setFailed('Unknown Error');
     }
 }
 run();
+
+
+/***/ }),
+
+/***/ 4093:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AbortionReasons = exports.OutputNames = exports.InputNames = void 0;
+var InputNames;
+(function (InputNames) {
+    InputNames["branchPattern"] = "branch-pattern";
+    InputNames["createBaseIfMissing"] = "create-base-if-missing";
+    InputNames["deleteSource"] = "delete-source";
+    InputNames["abortIfDifferentCommitsOnOrigin"] = "abort-integration-if-different-commits-on-origin";
+    InputNames["gitUserEmail"] = "git-user-email";
+    InputNames["gitUserName"] = "git-user-name";
+})(InputNames || (exports.InputNames = InputNames = {}));
+var OutputNames;
+(function (OutputNames) {
+    OutputNames["integrationTarget"] = "integration-target";
+    OutputNames["didIntegrate"] = "did-integrate";
+    OutputNames["abortionReason"] = "abortion-reason";
+    OutputNames["deletedSource"] = "deleted-source";
+    OutputNames["createdBase"] = "created-base";
+})(OutputNames || (exports.OutputNames = OutputNames = {}));
+var AbortionReasons;
+(function (AbortionReasons) {
+    AbortionReasons["noTarget"] = "no-integration-target-found";
+    AbortionReasons["originAhead"] = "newer-commits-on-origin";
+})(AbortionReasons || (exports.AbortionReasons = AbortionReasons = {}));
 
 
 /***/ }),
