@@ -2,6 +2,9 @@ import { integrate, UserEmail, UserName } from '../src/integrate';
 import { expect, it, describe, beforeEach, jest } from '@jest/globals';
 import simpleGit, { SimpleGitFactory } from 'simple-git'; // eslint-disable-line import/no-named-as-default, import/named
 import { getAllMethodNames, TEST_PATTERN } from './utils';
+import * as actionsCore from '@actions/core';
+import { AbortionReasons, OutputNames } from '../src/statics';
+import { after } from 'node:test';
 
 const DEFAULT_CURRENT_BRANCH = 'integrate_something_someone';
 
@@ -15,6 +18,9 @@ const actualSimpleGit: { simpleGit: SimpleGitFactory } =
     jest.requireActual('simple-git');
 const actualSimpleGitFactory = actualSimpleGit.simpleGit;
 const simpleGitMock = simpleGit as jest.Mock;
+
+jest.mock('@actions/core');
+const actionsCoreMock = actionsCore as jest.MockedObject<typeof actionsCore>;
 
 const GIT_DEFAULT_RETURNS: { [key: string]: Object } = {
     branch: { current: DEFAULT_CURRENT_BRANCH },
@@ -49,11 +55,21 @@ describe('integrate', () => {
         ),
         git('push', 'origin', 'something', '--set-upstream'),
     ];
+    let outputsLeft = Object.keys(OutputNames);
     let gitCommands: GitCommand[];
     let gitMockedMethods: Record<string, jest.MockedFunction<() => unknown>>;
 
+    after(() => {
+        // Expecting that all outputs are used
+        expect(outputsLeft).toEqual([]);
+    });
+
     beforeEach(() => {
         gitCommands = [];
+
+        actionsCoreMock.setOutput = jest.fn((key: string) => {
+            outputsLeft = outputsLeft.filter((value) => value === key);
+        });
 
         jest.spyOn(console, 'info').mockImplementation(jest.fn());
         setupGitMock();
@@ -100,7 +116,25 @@ describe('integrate', () => {
         const result = await integrate(TEST_PATTERN, DEFAULT_CONFIG_PARAMS);
 
         expect(gitCommands).toEqual(DEFAULT_COMMAND_EXPECTATION);
-        expect(result).toEqual('Branch was integrated');
+        expect(result).toEqual(
+            'Branch "integrate_something_someone" was successfully integrated into "something"'
+        );
+        expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+            OutputNames.integrationTarget,
+            'something'
+        );
+        expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+            OutputNames.didIntegrate,
+            false
+        );
+        expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+            OutputNames.deletedSource,
+            false
+        );
+        expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+            OutputNames.createdBase,
+            false
+        );
     });
 
     it('aborts if the branch does not match the pattern', async () => {
@@ -115,6 +149,10 @@ describe('integrate', () => {
 
         expect(result).toEqual(
             `Current branch does not match branch pattern or "base" group not defined\n\t↳Current branch: ${integrationSource}`
+        );
+        expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+            OutputNames.didIntegrate,
+            false
         );
     });
 
@@ -143,6 +181,14 @@ describe('integrate', () => {
                 expect(result).toEqual(
                     'Branch was not integrated as the origin has been updated in the meantime'
                 );
+                expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+                    OutputNames.didIntegrate,
+                    false
+                );
+                expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+                    OutputNames.abortionReason,
+                    AbortionReasons.originAhead
+                );
             });
 
             it('does not abort if value is false and the commits are not the same', async () => {
@@ -165,7 +211,17 @@ describe('integrate', () => {
                     abortIntegrationIfDifferentCommitsOnOrigin: false,
                 });
 
-                expect(result).toEqual('Branch was integrated');
+                expect(result).toEqual(
+                    'Branch "integrate_something_someone" was successfully integrated into "something"'
+                );
+                expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+                    OutputNames.didIntegrate,
+                    true
+                );
+                expect(actionsCoreMock.setOutput).not.toHaveBeenCalledWith(
+                    OutputNames.abortionReason,
+                    expect.anything()
+                );
             });
 
             it.each([true, false])(
@@ -178,13 +234,23 @@ describe('integrate', () => {
                         abortIntegrationIfDifferentCommitsOnOrigin,
                     });
 
-                    expect(result).toEqual('Branch was integrated');
+                    expect(result).toEqual(
+                        'Branch "integrate_something_someone" was successfully integrated into "something"'
+                    );
+                    expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+                        OutputNames.didIntegrate,
+                        true
+                    );
+                    expect(actionsCoreMock.setOutput).not.toHaveBeenCalledWith(
+                        OutputNames.abortionReason,
+                        expect.anything()
+                    );
                 }
             );
         });
 
         describe('createBaseIfMissing', () => {
-            it('creates base if missing if feature flag is true', async () => {
+            it('creates base if missing and feature flag is true', async () => {
                 gitMockedMethods.fetch.mockImplementationOnce(
                     buildBaseMockImplementation('fetch', () => {
                         throw new Error('some error');
@@ -210,11 +276,21 @@ describe('integrate', () => {
                     ),
                     git('push', 'origin', 'something', '--set-upstream'),
                 ]);
-                expect(result).toEqual('Branch was integrated');
+                expect(result).toEqual(
+                    'Branch "integrate_something_someone" was successfully integrated into "something"'
+                );
+                expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+                    OutputNames.didIntegrate,
+                    true
+                );
+                expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+                    OutputNames.createdBase,
+                    true
+                );
             });
 
             it.each([true, false])(
-                'does not create base if not missing if feature flag is "%s"',
+                'does not create base if not missing and feature flag is "%s"',
                 async (createBaseIfMissing) => {
                     const result = await integrate(TEST_PATTERN, {
                         ...DEFAULT_CONFIG_PARAMS,
@@ -222,11 +298,21 @@ describe('integrate', () => {
                     });
 
                     expect(gitCommands).toEqual(DEFAULT_COMMAND_EXPECTATION);
-                    expect(result).toEqual('Branch was integrated');
+                    expect(result).toEqual(
+                        'Branch "integrate_something_someone" was successfully integrated into "something"'
+                    );
+                    expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+                        OutputNames.didIntegrate,
+                        true
+                    );
+                    expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+                        OutputNames.createdBase,
+                        false
+                    );
                 }
             );
 
-            it('aborts if it is missing if feature flag is false', async () => {
+            it('aborts if it is missing and feature flag is false', async () => {
                 const error = 'Not found';
 
                 gitMockedMethods.fetch.mockImplementationOnce(
@@ -243,6 +329,14 @@ describe('integrate', () => {
                 }).rejects.toThrowError(error);
 
                 expect(gitCommands).toEqual([git('branch')]);
+                expect(actionsCoreMock.setOutput).not.toHaveBeenCalledWith(
+                    OutputNames.didIntegrate,
+                    true
+                );
+                expect(actionsCoreMock.setOutput).not.toHaveBeenCalledWith(
+                    OutputNames.createdBase,
+                    true
+                );
             });
         });
 
@@ -279,7 +373,17 @@ describe('integrate', () => {
                 expect(console.info).toHaveBeenCalledWith(
                     `Deleting "${DEFAULT_CURRENT_BRANCH}" on "origin"`
                 );
-                expect(result).toEqual('Branch was integrated');
+                expect(result).toEqual(
+                    'Branch "integrate_something_someone" was successfully integrated into "something"'
+                );
+                expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+                    OutputNames.didIntegrate,
+                    true
+                );
+                expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+                    OutputNames.deletedSource,
+                    true
+                );
             });
 
             it('does not delete source if flag is true and remote branch is ahead', async () => {
@@ -319,7 +423,17 @@ describe('integrate', () => {
                     git('revparse', `origin/${DEFAULT_CURRENT_BRANCH}`),
                     git('push', 'origin', 'something', '--set-upstream'),
                 ]);
-                expect(result).toEqual('Branch was integrated');
+                expect(result).toEqual(
+                    'Branch "integrate_something_someone" was successfully integrated into "something"'
+                );
+                expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+                    OutputNames.didIntegrate,
+                    true
+                );
+                expect(actionsCoreMock.setOutput).not.toHaveBeenCalledWith(
+                    OutputNames.deletedSource,
+                    true
+                );
             });
 
             it('does not delete source if flag is false and remote branch is ahead', async () => {
@@ -343,7 +457,17 @@ describe('integrate', () => {
                 });
 
                 expect(gitCommands).toEqual(DEFAULT_COMMAND_EXPECTATION);
-                expect(result).toEqual('Branch was integrated');
+                expect(result).toEqual(
+                    'Branch "integrate_something_someone" was successfully integrated into "something"'
+                );
+                expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+                    OutputNames.didIntegrate,
+                    true
+                );
+                expect(actionsCoreMock.setOutput).not.toHaveBeenCalledWith(
+                    OutputNames.deletedSource,
+                    true
+                );
             });
 
             it('does not delete source if flag is false and remote branch is ahead', async () => {
@@ -353,7 +477,17 @@ describe('integrate', () => {
                 });
 
                 expect(gitCommands).toEqual(DEFAULT_COMMAND_EXPECTATION);
-                expect(result).toEqual('Branch was integrated');
+                expect(result).toEqual(
+                    'Branch "integrate_something_someone" was successfully integrated into "something"'
+                );
+                expect(actionsCoreMock.setOutput).toHaveBeenCalledWith(
+                    OutputNames.didIntegrate,
+                    true
+                );
+                expect(actionsCoreMock.setOutput).not.toHaveBeenCalledWith(
+                    OutputNames.deletedSource,
+                    true
+                );
             });
         });
 

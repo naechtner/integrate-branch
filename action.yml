@@ -1,6 +1,7 @@
 name: 'Integrate branch'
 description: 'Integrate a branch onto the base branch'
 author: 'naechtner'
+
 inputs:
   branch-pattern:
     required: false
@@ -21,6 +22,19 @@ inputs:
   git-user-name:
     default: 'Github Action'
     description: 'The user name used for commits. (Default: "Github Action")'
+
+outputs:
+  integration-target:
+    description: "(string) The branch we are targeting with the rebase"
+  did-integrate:
+    description: "(boolean) Whether we integrated. Can be false if an error happened or the pattern does not match."
+  abortion-reason:
+    description: "(string) Reason for the abortion. For an overview of the options see src/statics.ts"
+  deleted-source:
+    description: "(boolean) Whether the source was deleted. Can only be true if source deletion is enabled."
+  created-base:
+    description: "(boolean) Whether the base was created during the process. Can only be true if the creation of the base is enabled."
+
 runs:
   using: 'node20'
   main: 'dist/index.js'

@@ -6,3 +6,16 @@ export enum InputNames {
     gitUserEmail = 'git-user-email',
     gitUserName = 'git-user-name',
 }
+
+export enum OutputNames {
+    integrationTarget = 'integration-target',
+    didIntegrate = 'did-integrate',
+    abortionReason = 'abortion-reason',
+    deletedSource = 'deleted-source',
+    createdBase = 'created-base',
+}
+
+export enum AbortionReasons {
+    noTarget = 'no-integration-target-found',
+    originAhead = 'newer-commits-on-origin',
+}

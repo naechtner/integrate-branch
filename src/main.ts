@@ -36,6 +36,7 @@ async function run(): Promise<void> {
         );
     } catch (error) {
         if (error instanceof Error) actionsCore.setFailed(error.message);
+        else actionsCore.setFailed('Unknown Error');
     }
 }
 
