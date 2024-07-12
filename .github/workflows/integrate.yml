@@ -19,24 +19,20 @@ jobs:
           ref: ${{ github.event.workflow_run.head_branch }}
           fetch-depth: 0
       - name: Run integration action
+        id: integrate
         uses: ./
         with:
           branch-pattern: "^for_(?<base>[-a-zA-Z/._0-9]+)_(?<identifier>[a-zA-Z]+)$"
           create-base-if-missing: true
           delete-source: true
           abort-integration-if-different-commits-on-origin: true
-  show-outputs:
-    runs-on: ubuntu-latest
-    needs:
-      - integrate
-    steps:
-      - name: outputs
+      - name: Outputs
         env:
-          INTEGRATION_TARGET: ${{ needs.integrate.outputs.integration-target }}
-          DID_INTEGRATE: ${{ needs.integrate.outputs.did-integrate }}
-          ABORTION_REASON: ${{ needs.integrate.outputs.abortion-reason }}
-          DELETED_SOURCE: ${{ needs.integrate.outputs.deleted-source }}
-          CREATED_BASE: ${{ needs.integrate.outputs.created-base }}
+          INTEGRATION_TARGET: ${{ steps.integrate.outputs.integration-target }}
+          DID_INTEGRATE: ${{ steps.integrate.outputs.did-integrate }}
+          ABORTION_REASON: ${{ steps.integrate.outputs.abortion-reason }}
+          DELETED_SOURCE: ${{ steps.integrate.outputs.deleted-source }}
+          CREATED_BASE: ${{ steps.integrate.outputs.created-base }}
         shell: bash
         run: |
             echo "Outputs:"
