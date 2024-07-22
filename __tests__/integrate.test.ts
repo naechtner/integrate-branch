@@ -46,14 +46,8 @@ describe('integrate', () => {
         git('addConfig', 'user.email', 'useremail'),
         git('addConfig', 'user.name', 'username'),
         git('fetch', 'origin', 'something', '--no-tags'),
-        git('branch', 'something', 'origin/something'),
-        git(
-            'rebase',
-            'integrate_something_someone',
-            'something',
-            '--rebase-merges'
-        ),
-        git('push', 'origin', 'something', '--set-upstream'),
+        git('rebase', 'origin/something', '--rebase-merges'),
+        git('push', 'origin', 'HEAD:something'),
     ];
     let outputsLeft = Object.keys(OutputNames);
     let gitCommands: GitCommand[];
@@ -267,14 +261,9 @@ describe('integrate', () => {
                     git('addConfig', 'user.email', 'useremail'),
                     git('addConfig', 'user.name', 'username'),
                     git('fetch', 'origin', 'something', '--no-tags'),
-                    git('branch', 'something'),
-                    git(
-                        'rebase',
-                        'integrate_something_someone',
-                        'something',
-                        '--rebase-merges'
-                    ),
-                    git('push', 'origin', 'something', '--set-upstream'),
+                    git('push', 'origin', 'HEAD:something'),
+                    git('rebase', 'origin/something', '--rebase-merges'),
+                    git('push', 'origin', 'HEAD:something'),
                 ]);
                 expect(result).toEqual(
                     'Branch "integrate_something_someone" was successfully integrated into "something"'
@@ -352,13 +341,8 @@ describe('integrate', () => {
                     git('addConfig', 'user.email', 'useremail'),
                     git('addConfig', 'user.name', 'username'),
                     git('fetch', 'origin', 'something', '--no-tags'),
-                    git('branch', 'something', 'origin/something'),
-                    git(
-                        'rebase',
-                        'integrate_something_someone',
-                        'something',
-                        '--rebase-merges'
-                    ),
+                    git('rebase', 'origin/something', '--rebase-merges'),
+                    git('push', 'origin', 'HEAD:something'),
                     git('fetch', DEFAULT_CURRENT_BRANCH),
                     git('revparse', DEFAULT_CURRENT_BRANCH),
                     git('revparse', `origin/${DEFAULT_CURRENT_BRANCH}`),
@@ -368,7 +352,6 @@ describe('integrate', () => {
                         'integrate_something_someone',
                         '--delete'
                     ),
-                    git('push', 'origin', 'something', '--set-upstream'),
                 ]);
                 expect(console.info).toHaveBeenCalledWith(
                     `Deleting "${DEFAULT_CURRENT_BRANCH}" on "origin"`
@@ -411,17 +394,11 @@ describe('integrate', () => {
                     git('addConfig', 'user.email', 'useremail'),
                     git('addConfig', 'user.name', 'username'),
                     git('fetch', 'origin', 'something', '--no-tags'),
-                    git('branch', 'something', 'origin/something'),
-                    git(
-                        'rebase',
-                        'integrate_something_someone',
-                        'something',
-                        '--rebase-merges'
-                    ),
+                    git('rebase', 'origin/something', '--rebase-merges'),
+                    git('push', 'origin', 'HEAD:something'),
                     git('fetch', DEFAULT_CURRENT_BRANCH),
                     git('revparse', DEFAULT_CURRENT_BRANCH),
                     git('revparse', `origin/${DEFAULT_CURRENT_BRANCH}`),
-                    git('push', 'origin', 'something', '--set-upstream'),
                 ]);
                 expect(result).toEqual(
                     'Branch "integrate_something_someone" was successfully integrated into "something"'

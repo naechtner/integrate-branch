@@ -38,14 +38,12 @@ async function checkIfIntegrationTargetExistsAndCreate(git, integrationTarget, c
     try {
         console.info(`Fetching "${integrationTarget}"`);
         await git.fetch('origin', integrationTarget, ['--no-tags']);
-        console.info(`Creating local branch "${integrationTarget}"`);
-        await git.branch([integrationTarget, `origin/${integrationTarget}`]);
     }
     catch (e) {
         if (createBaseIfMissing) {
             console.info("Couldn't find integration target, creating it");
             actionsCore.setOutput(statics_1.OutputNames.createdBase, true);
-            git.branch([integrationTarget]);
+            await git.push('origin', `HEAD:${integrationTarget}`);
         }
         else {
             console.info("Couldn't find integration target, aborting");
@@ -99,10 +97,10 @@ async function integrate(branchPattern, { createBaseIfMissing, shouldDeleteSourc
     await setUserData(git, userEmail, userName);
     await checkIfIntegrationTargetExistsAndCreate(git, integrationTarget, createBaseIfMissing);
     console.info(`Rebasing "${integrationSource}" onto "${integrationTarget}"`);
-    await git.rebase([integrationSource, integrationTarget, '--rebase-merges']);
-    await conditionallyDeleteSource(git, integrationSource, shouldDeleteSource);
+    await git.rebase([`origin/${integrationTarget}`, '--rebase-merges']);
     console.info(`Pushing "${integrationTarget}" to "origin"`);
-    await git.push('origin', integrationTarget, ['--set-upstream']);
+    await git.push('origin', `HEAD:${integrationTarget}`);
+    await conditionallyDeleteSource(git, integrationSource, shouldDeleteSource);
     actionsCore.setOutput(statics_1.OutputNames.didIntegrate, true);
     return `Branch "${integrationSource}" was successfully integrated into "${integrationTarget}"`;
 }
