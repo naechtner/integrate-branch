@@ -37,7 +37,10 @@ const statics_1 = __nccwpck_require__(4093);
 async function checkIfIntegrationTargetExistsAndCreate(git, integrationTarget, createBaseIfMissing) {
     try {
         console.info(`Fetching "${integrationTarget}"`);
-        await git.fetch('origin', integrationTarget, ['--no-tags']);
+        await git.fetch('origin', integrationTarget, [
+            '--no-tags',
+            '--unshallow',
+        ]);
         console.info(`Creating local branch "${integrationTarget}"`);
         await git.branch([integrationTarget, `origin/${integrationTarget}`]);
     }
@@ -62,7 +65,7 @@ async function setUserData(git, userEmail, userName) {
     }
 }
 async function isRemoteTheSame(git, branch) {
-    await git.fetch(branch);
+    await git.fetch(branch, ['--unshallow']);
     const currentCommitHash = await git.revparse(branch);
     const remoteCommitHash = await git.revparse(`origin/${branch}`);
     return currentCommitHash === remoteCommitHash;

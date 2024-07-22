@@ -45,7 +45,7 @@ describe('integrate', () => {
         git('branch'),
         git('addConfig', 'user.email', 'useremail'),
         git('addConfig', 'user.name', 'username'),
-        git('fetch', 'origin', 'something', '--no-tags'),
+        git('fetch', 'origin', 'something', '--no-tags', '--unshallow'),
         git('branch', 'something', 'origin/something'),
         git(
             'rebase',
@@ -266,7 +266,13 @@ describe('integrate', () => {
                     git('branch'),
                     git('addConfig', 'user.email', 'useremail'),
                     git('addConfig', 'user.name', 'username'),
-                    git('fetch', 'origin', 'something', '--no-tags'),
+                    git(
+                        'fetch',
+                        'origin',
+                        'something',
+                        '--no-tags',
+                        '--unshallow'
+                    ),
                     git('branch', 'something'),
                     git(
                         'rebase',
@@ -351,7 +357,13 @@ describe('integrate', () => {
                     git('branch'),
                     git('addConfig', 'user.email', 'useremail'),
                     git('addConfig', 'user.name', 'username'),
-                    git('fetch', 'origin', 'something', '--no-tags'),
+                    git(
+                        'fetch',
+                        'origin',
+                        'something',
+                        '--no-tags',
+                        '--unshallow'
+                    ),
                     git('branch', 'something', 'origin/something'),
                     git(
                         'rebase',
@@ -359,7 +371,7 @@ describe('integrate', () => {
                         'something',
                         '--rebase-merges'
                     ),
-                    git('fetch', DEFAULT_CURRENT_BRANCH),
+                    git('fetch', DEFAULT_CURRENT_BRANCH, '--unshallow'),
                     git('revparse', DEFAULT_CURRENT_BRANCH),
                     git('revparse', `origin/${DEFAULT_CURRENT_BRANCH}`),
                     git(
@@ -410,7 +422,13 @@ describe('integrate', () => {
                     git('branch'),
                     git('addConfig', 'user.email', 'useremail'),
                     git('addConfig', 'user.name', 'username'),
-                    git('fetch', 'origin', 'something', '--no-tags'),
+                    git(
+                        'fetch',
+                        'origin',
+                        'something',
+                        '--no-tags',
+                        '--unshallow'
+                    ),
                     git('branch', 'something', 'origin/something'),
                     git(
                         'rebase',
@@ -418,7 +436,7 @@ describe('integrate', () => {
                         'something',
                         '--rebase-merges'
                     ),
-                    git('fetch', DEFAULT_CURRENT_BRANCH),
+                    git('fetch', DEFAULT_CURRENT_BRANCH, '--unshallow'),
                     git('revparse', DEFAULT_CURRENT_BRANCH),
                     git('revparse', `origin/${DEFAULT_CURRENT_BRANCH}`),
                     git('push', 'origin', 'something', '--set-upstream'),
