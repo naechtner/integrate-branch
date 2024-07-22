@@ -134,10 +134,10 @@ export async function integrate(
     console.info(`Rebasing "${integrationSource}" onto "${integrationTarget}"`);
     await git.rebase([integrationSource, integrationTarget, '--rebase-merges']);
 
-    await conditionallyDeleteSource(git, integrationSource, shouldDeleteSource);
-
     console.info(`Pushing "${integrationTarget}" to "origin"`);
     await git.push('origin', integrationTarget, ['--set-upstream']);
+
+    await conditionallyDeleteSource(git, integrationSource, shouldDeleteSource);
 
     actionsCore.setOutput(OutputNames.didIntegrate, true);
     return `Branch "${integrationSource}" was successfully integrated into "${integrationTarget}"`;
