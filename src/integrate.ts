@@ -22,7 +22,10 @@ async function checkIfIntegrationTargetExistsAndCreate(
 ): Promise<void> {
     try {
         console.info(`Fetching "${integrationTarget}"`);
-        await git.fetch('origin', integrationTarget, ['--no-tags']);
+        await git.fetch('origin', integrationTarget, [
+            '--no-tags',
+            '--unshallow',
+        ]);
         console.info(`Creating local branch "${integrationTarget}"`);
         await git.branch([integrationTarget, `origin/${integrationTarget}`]);
     } catch (e) {
@@ -55,7 +58,7 @@ async function isRemoteTheSame(
     git: SimpleGit,
     branch: IntegrationSource | IntegrationTarget
 ): Promise<boolean> {
-    await git.fetch(branch);
+    await git.fetch(branch, ['--unshallow']);
     const currentCommitHash = await git.revparse(branch);
     const remoteCommitHash = await git.revparse(`origin/${branch}`);
 
