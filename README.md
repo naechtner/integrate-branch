@@ -16,7 +16,7 @@ This Github action helps you to merge or rebase changes onto a certain branch af
 - Checkout the repository
 - Call this action with the proper parameters for your use case
 
-For a good example see the [integrate workflow](.github/workflows/integrate.yml).
+For an example see the [integrate step](.github/workflows/test.yml).
 For all of the parameters see [action.yml](action.yml)
 
 Consider adding the following command to your git aliases:
